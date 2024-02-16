@@ -75,8 +75,6 @@ def receive():
                 continue
 
         nicknames.append(nickname)
-        clients.append(client)
-
         # Print And Broadcast Nickname
         print("Nickname is {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'))
