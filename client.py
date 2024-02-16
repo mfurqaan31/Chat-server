@@ -1,10 +1,11 @@
 import socket
 import threading
 
+
 # Choosing Nickname
 nickname = input("Choose your nickname: ")
 if nickname == 'admin':
-    
+
     passwd = input("enter password : ")
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
