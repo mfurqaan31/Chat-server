@@ -87,6 +87,7 @@ def receive():
 
 
 def kickUser(name):
+    
     if name in nicknames:
         nameIndex = nicknames.index(name)
         client = clients[nameIndex]
