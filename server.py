@@ -1,15 +1,18 @@
-import threading,sys,ssl,socket
+import threading
+import ssl,socket
 
 port = 55558
 host = 'localhost'
 
+#setting context for ssl
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
 context.load_cert_chain('ssl.pem', 'private.key')
-#context.load_verify_locations('ssl.pem')
+
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
  
+ #wrapping sll around socket
 server = context.wrap_socket(server, server_side=True)
 
 server.bind((host, port))

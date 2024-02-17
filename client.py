@@ -1,9 +1,11 @@
-import socket,threading,ssl,sys
+import socket
+import threading,ssl,sys
 
-
+#setting ssl context
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT,verify = False)
 
 context.load_verify_locations('ssl.pem')
+
 # Choosing Nickname
 nickname = input("Choose your nickname: ")
 if nickname == 'admin':
@@ -12,6 +14,7 @@ if nickname == 'admin':
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+#wrapping sll around socket
 client = context.wrap_socket(client, server_hostname='localhost')
 
 client.connect(('localhost', 55558))
