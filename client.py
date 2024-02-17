@@ -1,5 +1,6 @@
 import socket,threading,ssl,sys
 
+
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT,verify = False)
 
 context.load_verify_locations('ssl.pem')
