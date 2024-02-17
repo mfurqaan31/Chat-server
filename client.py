@@ -1,15 +1,26 @@
 import socket
-import threading
+import threading,ssl,sys
+
+    #setting ssl context
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT,verify = False)
+
+context.load_verify_locations('ssl.pem')
+
+# Connecting To Server
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+#wrapping sll around socket
+client = context.wrap_socket(client, server_hostname='localhost')
+
+client.connect(('localhost', 55558))
+
+stopThread = False
 
 # Choosing Nickname
 nickname = input("Choose your nickname: ")
 if nickname == 'admin':
-    passwd = input("enter password : ")
-# Connecting To Server
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((socket.gethostbyname(socket.gethostname()), 55557))
 
-stopThread = False
+    passwd = input("enter password : ")
 
 
 
@@ -40,7 +51,7 @@ def receive():
             # Close Connection When Error
             print("An error occured!")
             client.close()
-            break
+            sys.exit('exiting')
 
 # Sending Messages To Server
 def write():
@@ -53,8 +64,10 @@ def write():
             if nickname == 'admin':
                 if message.split(" ")[1].startswith('/kick'):
                     client.send(f'KICK {message.split(" ")[2]}'.encode('ascii'))
+                    
                 elif message.split(" ")[1].startswith('/ban'):
                     client.send(f'BAN {message.split(" ")[2]}'.encode('ascii'))
+                    
             else:
                 print("You are not admin")
         else:

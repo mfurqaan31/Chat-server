@@ -1,10 +1,21 @@
-import socket
 import threading
-host = socket.gethostbyname(socket.gethostname())
-port = 55557
+import ssl,socket
+
+host = 'localhost'
+port = 55558
+
+
+#setting context for ssl
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+context.load_cert_chain('ssl.pem', 'private.key')
 
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ 
+ #wrapping sll around socket
+server = context.wrap_socket(server, server_side=True)
+
 server.bind((host, port))
 server.listen()
 
@@ -76,7 +87,6 @@ def receive():
 
         nicknames.append(nickname)
         clients.append(client)
-
         # Print And Broadcast Nickname
         print("Nickname is {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'))
@@ -85,7 +95,7 @@ def receive():
         # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
-        print(f"number of active connections is : {threading.active_count() - 1}")
+        #print(f"number of active connections is : {threading.active_count() - 1}")
 
 
 def kickUser(name):
