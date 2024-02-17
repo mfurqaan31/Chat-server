@@ -1,16 +1,11 @@
 import socket
 import threading,ssl,sys
 
-#setting ssl context
+    #setting ssl context
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT,verify = False)
 
 context.load_verify_locations('ssl.pem')
 
-# Choosing Nickname
-nickname = input("Choose your nickname: ")
-if nickname == 'admin':
-
-    passwd = input("enter password : ")
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -20,6 +15,12 @@ client = context.wrap_socket(client, server_hostname='localhost')
 client.connect(('localhost', 55558))
 
 stopThread = False
+
+# Choosing Nickname
+nickname = input("Choose your nickname: ")
+if nickname == 'admin':
+
+    passwd = input("enter password : ")
 
 
 
@@ -66,7 +67,7 @@ def write():
                     
                 elif message.split(" ")[1].startswith('/ban'):
                     client.send(f'BAN {message.split(" ")[2]}'.encode('ascii'))
-                    break
+                    
             else:
                 print("You are not admin")
         else:

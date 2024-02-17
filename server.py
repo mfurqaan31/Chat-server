@@ -1,8 +1,9 @@
 import threading
 import ssl,socket
 
-port = 55558
 host = 'localhost'
+port = 55558
+
 
 #setting context for ssl
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
