@@ -1,8 +1,11 @@
 import socket
 import threading
 import pickle
-import sys
+import ssl
 
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+
+context.load_verify_locations('ssl.pem')
 state = {}
 
 def serverListen(serverSocket):
@@ -178,6 +181,7 @@ def waitUserInput(serverSocket):
 def main():
 
 	serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	serverSocket = context.wrap_socket(serverSocket,server_hostname='localhost')
 	serverSocket.connect(("localhost", 55558))
 	state["inputCondition"] = threading.Condition()
 	state["sendMessageLock"] = threading.Lock()

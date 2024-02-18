@@ -2,7 +2,11 @@ import socket
 import threading
 import pickle
 import os
-import sys
+import ssl
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+context.load_cert_chain('ssl.pem','private.key')
 
 groups = {}
 fileTransferCondition = threading.Condition()
@@ -182,6 +186,7 @@ def handshake(client):
 
 def main():
     listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listen_socket = context.wrap_socket(listen_socket,server_side=True)
     listen_socket.bind(("localhost", 55558 ))
     listen_socket.listen(10)
     print("PyconChat Server running")
