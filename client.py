@@ -1,7 +1,8 @@
 import socket
 import threading
 import pickle
-import sys
+import ssl
+
 
 state = {}
 
@@ -176,9 +177,12 @@ def waitUserInput(serverSocket):
 			break
 
 def main():
+	context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
+	context.load_verify_locations('ssl.pem')
 	serverSocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-	serverSocket.connect(("localhost", 55558))
+	serverSocket_s = context.wrap_socket(serverSocket,server_hostname='localhost')
+	serverSocket_s.connect(("localhost", 55558))
 	state["inputCondition"] = threading.Condition()
 	state["sendMessageLock"] = threading.Lock()
 	state["username"] = input("Welcome to PyconChat! Please enter your username: ")
@@ -186,10 +190,10 @@ def main():
 	state["alive"] = False
 	state["joinDisconnect"] = False
 	state["inputMessage"] = True
-	serverSocket.send(bytes(state["username"],"utf-8"))
-	serverSocket.recv(1024)
-	serverSocket.send(bytes(state["groupname"],"utf-8"))
-	response = serverSocket.recv(1024).decode("utf-8")
+	serverSocket_s.send(bytes(state["username"],"utf-8"))
+	serverSocket_s.recv(1024)
+	serverSocket_s.send(bytes(state["groupname"],"utf-8"))
+	response = serverSocket_s.recv(1024).decode("utf-8")
 	if response == "/adminReady":
 		print("You have created the group",state["groupname"],"and are now an admin.")
 		state["alive"] = True
@@ -199,10 +203,10 @@ def main():
 	elif response == "/wait":
 		print("Your request to join the group is pending admin approval.")
 		print("Available Commands:\n/1 -> Disconnect\n")
-	waitUserInputThread = threading.Thread(target=waitUserInput,args=(serverSocket,))
-	waitServerListenThread = threading.Thread(target=waitServerListen,args=(serverSocket,))
-	userInputThread = threading.Thread(target=userInput,args=(serverSocket,))
-	serverListenThread = threading.Thread(target=serverListen,args=(serverSocket,))
+	waitUserInputThread = threading.Thread(target=waitUserInput,args=(serverSocket_s,))
+	waitServerListenThread = threading.Thread(target=waitServerListen,args=(serverSocket_s,))
+	userInputThread = threading.Thread(target=userInput,args=(serverSocket_s,))
+	serverListenThread = threading.Thread(target=serverListen,args=(serverSocket_s,))
 	waitUserInputThread.start()
 	waitServerListenThread.start()
 	while True:
@@ -216,15 +220,15 @@ def main():
 		serverListenThread.start()
 	while True:
 		if state["joinDisconnect"]:
-			serverSocket.shutdown(socket.SHUT_RDWR)
-			serverSocket.close()
+			serverSocket_s.shutdown(socket.SHUT_RDWR)
+			serverSocket_s.close()
 			waitUserInputThread.join()
 			waitServerListenThread.join()
 			print("Disconnected from PyconChat.")
 			break
 		elif not state["alive"]:
-			serverSocket.shutdown(socket.SHUT_RDWR)
-			serverSocket.close()
+			serverSocket_s.shutdown(socket.SHUT_RDWR)
+			serverSocket_s.close()
 			userInputThread.join()
 			serverListenThread.join()
 			print("Disconnected from PyconChat.")
