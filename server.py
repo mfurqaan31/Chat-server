@@ -4,9 +4,7 @@ import pickle
 import os
 import ssl
 
-context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
-context.load_cert_chain('ssl.pem','private.key')
 
 groups = {}
 fileTransferCondition = threading.Condition()
@@ -185,13 +183,16 @@ def handshake(client):
         print("New Group:", groupname, "| Admin:", username)
 
 def main():
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+    context.load_cert_chain('ssl.pem','private.key')
     listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listen_socket = context.wrap_socket(listen_socket,server_side=True)
-    listen_socket.bind(("localhost", 55558 ))
-    listen_socket.listen(10)
+    listen_s_socket = context.wrap_socket(listen_socket,server_side=True)
+    listen_s_socket.bind(("localhost", 55558 ))
+    listen_s_socket.listen(10)
     print("PyconChat Server running")
     while True:
-        client, _ = listen_socket.accept()
+        client, _ = listen_s_socket.accept()
         threading.Thread(target=handshake, args=(client,)).start()
 
 if __name__ == "__main__":
