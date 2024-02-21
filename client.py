@@ -29,6 +29,7 @@ def receive():
         try:
             # Receive Message From Server
             # If 'MANU' Send Nickname
+            
             message = client.recv(1024).decode('ascii')
             if message == 'MANU':
                 client.send(nickname.encode('ascii'))
@@ -36,12 +37,18 @@ def receive():
                 if next_message == 'PASS':
                     client.send(passwd.encode('ascii'))
                     if client.recv(1024).decode('ascii') == 'WRONG':
-                        print('wrong password')
+                        print('wrong password,press ctrl C to exit')
                         stopThread = True
                 elif next_message == 'BAN':
-                    print('Connection refused due to ban')
+                    print('Connection refused due to ban ,press ctrl c to exit')
                     client.close()
                     stopThread = True
+                elif next_message == 'DUPLICATE':
+                    print('this user already exists ,press control C to stop execution')
+                    client.close()
+                    stopThread = True
+                elif next_message == 'MEMBERS':
+                    print('are the members') 
             else:
                 print(message)
                 if message.startswith("File received at:"):
@@ -62,7 +69,7 @@ def write():
 
         if message.startswith('/'):
             command_parts=message.split(" ")
-            if len(command_parts)>1:
+            if len(command_parts)>=1:
                 if command_parts[0]=='/file':
                     file_path=command_parts[1].strip()
                     if os.path.exists(file_path):
@@ -74,6 +81,10 @@ def write():
                         client.send(f'KICK {command_parts[1]}'.encode('ascii'))
                     elif command_parts[0] == '/ban':
                         client.send(f'BAN {command_parts[1]}'.encode('ascii'))
+                    elif command_parts[0] == '/members':
+                        client.send(f'MEMBERS'.encode('ascii'))
+                    else:
+                        print(f'invalid command')
                 else:
                     print("You are not admin")
             else:
@@ -88,4 +99,8 @@ receive_thread = threading.Thread(target=receive)
 receive_thread.start()
 
 write_thread = threading.Thread(target=write)
+
 write_thread.start()
+
+receive_thread.join()
+write_thread.join()
