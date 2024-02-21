@@ -127,5 +127,6 @@ def kickUser(name):
         nicknames.remove(name)
         broadcast("{} was kicked by admin.".format(name).encode('ascii'))
 
+
 if __name__ =='__main__':
   receive()
