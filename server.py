@@ -1,4 +1,4 @@
-import socket,threading,ssl
+import socket,threading,ssl,shutil,os
 
 host = 'localhost'
 port = 55557
@@ -41,6 +41,17 @@ def handle(client):
                     kickUser(nameToBan)
                 else:
                     client.send('Command was reduced'.encode('ascii'))
+            elif place_message.decode('ascii').startswith("Filename"):
+                file_path = place_message.decode('ascii').split(" ", 1)[1]
+                print(f"Uploaded file path: {file_path}")
+                broadcast(f"File received at: {file_path}".encode('ascii'))
+                file=os.path.basename(file_path)
+                downloads=os.path.join(os.path.expanduser("~"), "Downloads")
+                folder_path = os.path.join(downloads, "Server Files")
+                os.makedirs(folder_path, exist_ok=True)
+                destination_path = os.path.join(folder_path, file)
+                shutil.copy(file_path, destination_path)
+
             else:
                 broadcast(message)
         except:
