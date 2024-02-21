@@ -1,8 +1,11 @@
-import socket,threading,ssl
+import socket
+import threading
+import ssl
+import os
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
-host  = 'localhost'
+host = 'localhost'
 context.load_verify_locations('ssl.pem')
 # Choosing Nickname
 nickname = input("Choose your nickname: ")
@@ -10,10 +13,9 @@ if nickname == 'admin':
     passwd = input("enter password : ")
 # Connecting To Server
 
-
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-client = context.wrap_socket(client,server_hostname=host)
+client = context.wrap_socket(client, server_hostname=host)
 client.connect((host, 55557))
 
 stopThread = False
@@ -42,29 +44,44 @@ def receive():
                     stopThread = True
             else:
                 print(message)
+                if message.startswith("File received at:"):
+                    pass
         except:
             # Close Connection When Error
-            print("An error occured!")
+            print("An error occurred!")
             client.close()
             break
 
 # Sending Messages To Server
 def write():
     while True:
-        if stopThread == True:
+        if stopThread:
             break
 
-        message = f'{format(nickname)}: {format(input(""))}'
-        if message.split(" ")[1].startswith('/'):
-            if nickname == 'admin':
-                if message.split(" ")[1].startswith('/kick'):
-                    client.send(f'KICK {message.split(" ")[2]}'.encode('ascii'))
-                elif message.split(" ")[1].startswith('/ban'):
-                    client.send(f'BAN {message.split(" ")[2]}'.encode('ascii'))
+        message = input()
+
+        if message.startswith('/'):
+            command_parts=message.split(" ")
+            if len(command_parts)>1:
+                if command_parts[0]=='/file':
+                    file_path=command_parts[1].strip()
+                    if os.path.exists(file_path):
+                        client.send(f'Filename {file_path}'.encode('ascii'))
+                    else:
+                        print("File not found!")
+                elif nickname == 'admin':
+                    if command_parts[0] == '/kick':
+                        client.send(f'KICK {command_parts[1]}'.encode('ascii'))
+                    elif command_parts[0] == '/ban':
+                        client.send(f'BAN {command_parts[1]}'.encode('ascii'))
+                else:
+                    print("You are not admin")
             else:
-                print("You are not admin")
+                print("Invalid command format")
         else:
-            client.send(message.encode('ascii'))
+            client.send(f'{nickname}: {message}'.encode('ascii'))
+
+
 
 # Starting Threads For Listening And Writing
 receive_thread = threading.Thread(target=receive)
