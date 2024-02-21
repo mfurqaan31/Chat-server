@@ -1,4 +1,4 @@
-import socket,threading,ssl
+import socket,threading,ssl,sys
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
@@ -14,7 +14,8 @@ if nickname == 'admin':
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 client = context.wrap_socket(client,server_hostname=host)
-client.connect((host, 55557))
+
+client.connect((host, 55558))
 
 stopThread = False
 
@@ -34,10 +35,14 @@ def receive():
                 if next_message == 'PASS':
                     client.send(passwd.encode('ascii'))
                     if client.recv(1024).decode('ascii') == 'WRONG':
-                        print('wrong password')
+                        print('wrong password,press control C to stop execution')
                         stopThread = True
                 elif next_message == 'BAN':
-                    print('Connection refused due to ban')
+                    print('Connection refused due to ban,press control C to stop execution')
+                    client.close()
+                    stopThread = True
+                elif next_message == 'DUPLICATE':
+                    print('this user already exists,press control C to stop execution')
                     client.close()
                     stopThread = True
             else:
@@ -46,7 +51,7 @@ def receive():
             # Close Connection When Error
             print("An error occured!")
             client.close()
-            break
+            sys.exit()
 
 # Sending Messages To Server
 def write():
@@ -55,6 +60,9 @@ def write():
             break
 
         message = f'{format(nickname)}: {format(input(""))}'
+        if message.split(" ")[1].startswith('bye'):
+            client.send(f'BYE'.encode('ascii'))
+            #sys.exit()
         if message.split(" ")[1].startswith('/'):
             if nickname == 'admin':
                 if message.split(" ")[1].startswith('/kick'):
@@ -72,3 +80,6 @@ receive_thread.start()
 
 write_thread = threading.Thread(target=write)
 write_thread.start()
+
+receive_thread.join()
+write_thread.join()
