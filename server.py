@@ -9,7 +9,8 @@ context.load_cert_chain('ssl.pem','private.key')
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server = context.wrap_socket(server, server_side=True)
-
+#allows to connect without having to increment port
+server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 server.bind((host, port))
 server.listen()
 
@@ -20,17 +21,22 @@ def broadcast(message):
     for client in clients:
         client.send(message)
 
-def handle(client):
+def handle(client,address):
     while True:
         try:
             # Broadcasting Messages
             place_message = message = client.recv(1024)
+            if place_message.decode('ascii').split(" ")[0] == 'MEMBERS':
+                for name in nicknames:
+                    if name!='admin':
+                        client.send(f'{name ,}'.encode('ascii'))
+                continue
             if place_message.decode('ascii').split(" ")[0] == 'KICK':
                 if nicknames[clients.index(client)] == 'admin':
                     nameToKick = place_message.decode('ascii').split(" ")[1]
                     kickUser(nameToKick)
                 else:
-                    client.send('Command was reduced'.encode('ascii'))
+                    client.send('Command was refused(not an admin)'.encode('ascii'))
             elif place_message.decode('ascii').split(" ")[0] == 'BAN':
                 if nicknames[clients.index(client)] == 'admin':
                     nameToBan = place_message.decode('ascii').split(" ")[1]
@@ -40,7 +46,7 @@ def handle(client):
                     print(f"{nameToBan} has been banned.")
                     kickUser(nameToBan)
                 else:
-                    client.send('Command was reduced'.encode('ascii'))
+                    client.send('Command was refused(not an admin)'.encode('ascii'))
             elif place_message.decode('ascii').startswith("Filename"):
                 file_path = place_message.decode('ascii').split(" ", 1)[1]
                 print(f"Uploaded file path: {file_path}")
@@ -51,18 +57,19 @@ def handle(client):
                 os.makedirs(folder_path, exist_ok=True)
                 destination_path = os.path.join(folder_path, file)
                 shutil.copy(file_path, destination_path)
+                
 
             else:
                 broadcast(message)
         except:
             if client in clients:
-            # Removing And Closing Clients
                 index = clients.index(client)
-                clients.remove(client)
-                client.close()
+                clients.remove(client)   
                 nickname = nicknames[index]
                 broadcast('{} left!'.format(nickname).encode('ascii'))
+                print(f'client of ip {address} is disconnected')
                 nicknames.remove(nickname)
+                client.close()
                 break
 
 def receive():
@@ -75,7 +82,11 @@ def receive():
         # Request And Store Nickname
         client.send('MANU'.encode('ascii'))
         nickname = client.recv(1024).decode('ascii')
-
+        if nickname in nicknames:
+            client.send('DUPLICATE'.encode('ascii'))
+            print(f'client having ip {address} is disconnected')
+            client.close()
+            continue
         with open('banlist.txt','r') as f:
             bans = f.readlines()
         if nickname+'\n' in bans:
@@ -100,9 +111,9 @@ def receive():
         client.send('Connected to server!'.encode('ascii'))
 
         # Start Handling Thread For Client
-        thread = threading.Thread(target=handle, args=(client,))
+        thread = threading.Thread(target=handle, args=(client,address,))
         thread.start()
-        print(f"number of active connections is : {threading.active_count() - 1}")
+        #print(f"number of active connections is : {threading.active_count() - 1}")
 
 
 def kickUser(name):
@@ -110,10 +121,11 @@ def kickUser(name):
         nameIndex = nicknames.index(name)
         client = clients[nameIndex]
         clients.remove(client)
+        print(f'{name} is disconnected')
         client.send('you have been kicked by the admin'.encode('ascii'))
         client.close()
         nicknames.remove(name)
         broadcast("{} was kicked by admin.".format(name).encode('ascii'))
 
-
-receive()
+if __name__ =='__main__':
+  receive()
