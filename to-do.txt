@@ -1,6 +1,0 @@
-The errors that needed to be fixed are:
-
-1) no one can be the admin
-2) mulpitle users can join with the same username
-3) need to add file transfer feature refer 
-https://github.com/nikhilroxtomar/Multiple-File-Transfer-using-TCP-Socket-in-Python3
